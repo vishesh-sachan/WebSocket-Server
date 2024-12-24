@@ -14,7 +14,7 @@ enum Status {
   closed
 }
 
-interface data {
+interface Data {
   isWarden:Boolean,
   isStudent:Boolean,
   passId:Number,
@@ -22,36 +22,41 @@ interface data {
 }
 
 wss.on('connection', function connection(ws) {
-  ws.on('error', console.error);
-
-  ws.on('message', function message(message) {
-    const data: data = JSON.parse(message.toString());
-    // console.log(data)
-    if(data.isWarden == true){
-      const res:any = axios.put('http://localhost:3000/api/pass',{
-        passId: data.passId,
-        status: data.status
-      })
+    ws.on('error', console.error);
+  
+    ws.on('message', function message(message) {
+      const data: Data = JSON.parse(message.toString());
       
-      if(res.status == 200){
+      if (data.isWarden) {
+        // Simulating an API response
+        const res = { status: 200 };
+        
+        if (res.status === 200) {
+          wss.clients.forEach(function each(client) {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify({
+                isWarden: data.isWarden,
+                isStudent: data.isStudent,
+                passId: data.passId,
+                status: data.status
+              }));
+            }
+          });
+        }
+      }
+  
+      if (data.isStudent) {
+        // Simulating a DB check for the pass
         wss.clients.forEach(function each(client) {
-          if (client.readyState === WebSocket.OPEN) {
-            // console.log(`isWarden:${data.isWarden},isStudent:${data.isStudent},passId:${data.passId},status:${data.status}`)
-            client.send(JSON.stringify({isWarden:data.isWarden,isStudent:data.isStudent,passId:data.passId,status:data.status}));
+          if (client !== ws && client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({
+              isWarden: data.isWarden,
+              isStudent: data.isStudent,
+              passId: data.passId,
+              status: data.status
+            }));
           }
         });
       }
-    
-    }
-
-    if(data.isStudent == true){
-      // make a db check for pass
-      wss.clients.forEach(function each(client) {
-        if (client.readyState === WebSocket.OPEN) {
-          // console.log(`isWarden:${data.isWarden},isStudent:${data.isStudent},passId:${data.passId},status:${data.status}`)
-          client.send(JSON.stringify({isWarden:data.isWarden,isStudent:data.isStudent,passId:data.passId,status:data.status}));
-        }
-      });
-    }
+    });
   });
-});
