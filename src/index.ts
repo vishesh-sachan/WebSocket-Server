@@ -2,7 +2,9 @@ import express from 'express';
 import { WebSocketServer, WebSocket } from 'ws';
 
 const app = express();
-const httpServer = app.listen(8080);
+const httpServer = app.listen(8080, () => {
+  console.log('HTTP server listening on port 8080');
+});
 
 const wss = new WebSocketServer({ server: httpServer });
 
@@ -21,12 +23,27 @@ interface Data {
 }
 
 wss.on('connection', function connection(ws: WebSocket) {
-  ws.on('error', console.error);
+  console.log('New WebSocket connection established');
+
+  ws.on('error', (error) => {
+    console.error('WebSocket error:', error);
+  });
 
   ws.on('message', function message(message: any) {
-    const data: Data = JSON.parse(message.toString());
+    console.log('Received message:', message.toString());
+
+    let data: Data;
+    try {
+      data = JSON.parse(message.toString());
+    } catch (error) {
+      console.error('Error parsing message:', error);
+      return;
+    }
+
+    console.log('Parsed data:', data);
 
     if (!data.isStudent) {
+      console.log('Broadcasting to all non-student clients');
       wss.clients.forEach(function each(client: WebSocket) {
         if (client !== ws && client.readyState === WebSocket.OPEN) {
           client.send(
@@ -42,6 +59,7 @@ wss.on('connection', function connection(ws: WebSocket) {
     }
 
     if (data.isStudent) {
+      console.log('Broadcasting to all student clients');
       wss.clients.forEach(function each(client: WebSocket) {
         if (client !== ws && client.readyState === WebSocket.OPEN) {
           client.send(
@@ -54,5 +72,9 @@ wss.on('connection', function connection(ws: WebSocket) {
         }
       });
     }
+  });
+
+  ws.on('close', () => {
+    console.log('WebSocket connection closed');
   });
 });
