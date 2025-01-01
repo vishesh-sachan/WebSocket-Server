@@ -10,10 +10,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@types/axios": "^0.9.36",
     "@types/express": "^5.0.0",
     "@types/ws": "^8.5.13",
-    "axios": "^1.7.9",
     "express": "^4.21.2",
     "ws": "^8.18.0"
   }
