@@ -2,15 +2,7 @@ import express from 'express';
 import { WebSocketServer, WebSocket } from 'ws';
 
 const app = express();
-const PORT = process.env.PORT || 8080;
-
-app.get('/', (req, res) => {
-  res.send('WebSocket server is running!');
-});
-
-const httpServer = app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+const httpServer = app.listen(8080);
 
 const wss = new WebSocketServer({ server: httpServer });
 
@@ -28,15 +20,14 @@ interface Data {
   status: Status;
 }
 
-wss.on('connection', (ws: WebSocket) => {
-  console.log('New WebSocket connection');
+wss.on('connection', function connection(ws: WebSocket) {
   ws.on('error', console.error);
 
-  ws.on('message', (message: WebSocket.RawData) => {
+  ws.on('message', function message(message: any) {
     const data: Data = JSON.parse(message.toString());
 
     if (!data.isStudent) {
-      wss.clients.forEach((client: WebSocket) => {
+      wss.clients.forEach(function each(client: WebSocket) {
         if (client !== ws && client.readyState === WebSocket.OPEN) {
           client.send(
             JSON.stringify({
@@ -51,7 +42,7 @@ wss.on('connection', (ws: WebSocket) => {
     }
 
     if (data.isStudent) {
-      wss.clients.forEach((client: WebSocket) => {
+      wss.clients.forEach(function each(client: WebSocket) {
         if (client !== ws && client.readyState === WebSocket.OPEN) {
           client.send(
             JSON.stringify({
@@ -64,20 +55,4 @@ wss.on('connection', (ws: WebSocket) => {
       });
     }
   });
-
-  ws.on('close', () => {
-    console.log('WebSocket connection closed');
-  });
-});
-
-process.on('uncaughtException', (err) => {
-  console.error('Unhandled Exception:', err);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection:', reason);
-});
-
-wss.on('error', (error) => {
-  console.error('WebSocket Server Error:', error);
 });
