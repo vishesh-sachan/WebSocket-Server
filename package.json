@@ -11,9 +11,11 @@
     "ws": "^8.12.0"
   },
   "devDependencies": {
-    "typescript": "^5.2.2"
+    "@types/express": "^5.0.0",
+    "@types/ws": "^8.5.13",
+    "typescript": "^5.7.2"
   },
   "engines": {
-    "node": "18.x"
+    "node": ">=18.x"
   }
 }
