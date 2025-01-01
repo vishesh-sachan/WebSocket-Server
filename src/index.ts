@@ -1,4 +1,3 @@
-import axios from 'axios';
 import express from 'express';
 import { WebSocketServer, WebSocket } from 'ws';
 
@@ -15,48 +14,43 @@ enum Status {
 }
 
 interface Data {
-  isWarden:Boolean,
-  isStudent:Boolean,
-  passId:Number,
-  status:Status
+  isStudent: Boolean,
+  passId: number,
+  studentId: number,
+  status: Status
 }
 
 wss.on('connection', function connection(ws) {
-    ws.on('error', console.error);
-  
-    ws.on('message', function message(message) {
-      const data: Data = JSON.parse(message.toString());
-      
-      if (data.isWarden) {
-        // Simulating an API response
-        const res = { status: 200 };
-        
-        if (res.status === 200) {
+  ws.on('error', console.error);
+
+  ws.on('message', function message(message) {
+    const data: Data = JSON.parse(message.toString());
+
+    if (!data.isStudent) {
+      // console.log(`from warden ${data.isStudent},${data.passId},${data.status},${data.studentId}`);
           wss.clients.forEach(function each(client) {
             if (client !== ws && client.readyState === WebSocket.OPEN) {
               client.send(JSON.stringify({
-                isWarden: data.isWarden,
                 isStudent: data.isStudent,
                 passId: data.passId,
+                studentId: data.studentId,
                 status: data.status
               }));
             }
           });
+    }
+    
+    if (data.isStudent) {
+      // console.log(`from student ${data}`);
+      wss.clients.forEach(function each(client) {
+        if (client !== ws && client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            isStudent: data.isStudent,
+            passId: data.passId,
+            studentId: data.studentId
+          }));
         }
-      }
-  
-      if (data.isStudent) {
-        // Simulating a DB check for the pass
-        wss.clients.forEach(function each(client) {
-          if (client !== ws && client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({
-              isWarden: data.isWarden,
-              isStudent: data.isStudent,
-              passId: data.passId,
-              status: data.status
-            }));
-          }
-        });
-      }
-    });
+      });
+    }
   });
+});
